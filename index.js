@@ -1,23 +1,53 @@
+const RoomCollection = require('./src/RoomCollection');
+const Joueur = require('./src/Joueur');
+const NoRoomLeft = require('./src/errors/NoRoomLeft')
+
 const app = require('express')();
 const http = require('http').createServer(app);
 const io = require('socket.io')(http);
 
-const rooms = [];
+const rooms = new RoomCollection;
 
 io.on('connection', (socket) => {
     console.log('new guest');
 
-    socket.emit('connected');
+    const joueur = new Joueur(socket);
 
-    socket.on('register', roomName => {
-        socket.join(roomName);
-        socket.emit('enteredRoom', roomName);
-        socket.broadcast.to(roomName).emit('someoneEnteredRoom');
+    socket.emit('connected', socket.id);
+
+    socket.on('register', data => {
+        try {
+            let room = null;
+            const joueur = new Joueur(data.joueur, socket);
+            
+            if (rooms.has(data.roomName)) {
+                room = rooms.get(data.roomName);
+                console.log('room retrouvée : ', room);
+            } else {
+                room = rooms.add(data.roomName);
+                console.log('room added : ', room);
+            }
+    
+            room.add(joueur);
+    
+            console.log('ajouté : ', joueur.name);
+            
+            socket.emit('enteredRoom', room.export());
+
+            socket.broadcast.to(data.roomName).emit('someoneEnteredRoom', {
+                joueur: joueur.name
+            });
+        } catch (e) {
+            console.log('la grosse erreur : ', e.message);
+            if (e instanceof NoRoomLeft) {
+                socket.emit('noRoom', e.message);
+            }
+        }
     });
 });
 
-io.on('disconnection', socket => {
-    console.log(socket);
+io.on('disconnect', socket => {
+    rooms.disconnect(socket);
 });
 
 http.listen(4949, () => {

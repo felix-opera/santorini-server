@@ -27,12 +27,11 @@ io.on('connection', (socket) => {
                 room = rooms.add(data.roomName);
                 console.log('room added : ', room);
             }
-    
+            
+            socket.emit('enteredRoom', room.export());
             room.add(joueur);
     
             console.log('ajouté : ', joueur.name);
-            
-            socket.emit('enteredRoom', room.export());
 
             socket.broadcast.to(data.roomName).emit('someoneEnteredRoom', {
                 joueur: joueur.name

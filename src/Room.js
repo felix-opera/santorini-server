@@ -11,7 +11,7 @@ class Room
     export() {
         return {
             name: this.name,
-            joueurs: this.players.map(p => p.name)
+            joueurs: this.players.map(p => p.export())
         };
     }
 

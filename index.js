@@ -61,6 +61,14 @@ io.on('connection', (socket) => {
             socket.broadcast.to(socket.joueur.room.name).emit('newPlayer', socket.joueur.export());
         }
     });
+
+    socket.on('idlePion', data => {
+        socket.broadcast.to(socket.joueur.room.name).emit('idlePion', data);
+    });
+
+    socket.on('pionMove', data => {
+        socket.broadcast.to(socket.joueur.room.name).emit('pionMove', data);
+    });
 });
 
 io.on('disconnect', socket => {

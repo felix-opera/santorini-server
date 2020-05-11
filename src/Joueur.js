@@ -1,3 +1,5 @@
+const { v4: uuidv4 } = require('uuid');
+
 class Joueur
 {
     constructor (name, socket) {
@@ -7,6 +9,14 @@ class Joueur
         this.divinite = 'no';
         this.ready = false;
         this.id = socket.id;
+        this.pions = [
+            {
+                id: uuidv4(),
+            },
+            {
+                id: uuidv4(),
+            }
+        ]
     }
 
     export () {
@@ -14,7 +24,8 @@ class Joueur
             name: this.name,
             id: this.id,
             divinite: this.divinite,
-            ready: this.ready
+            ready: this.ready,
+            pions: this.pions
         }
     }
 }

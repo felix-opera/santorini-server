@@ -54,7 +54,8 @@ io.on('connection', (socket) => {
         console.log('joueur précisé : ', data);
 
         // Tous prets
-        if (socket.joueur.room.players.filter(p => p.ready).length == socket.joueur.room.players.length) {
+        if (socket.joueur.room.players.filter(p => p.ready).length == socket.joueur.room.players.length 
+        && socket.joueur.room.players.length > 1) {
             io.to(socket.joueur.room.name).emit('letsgo', socket.joueur.room.export());
         } else {
             socket.broadcast.to(socket.joueur.room.name).emit('newPlayer', socket.joueur.export());

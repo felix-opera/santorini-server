@@ -4,7 +4,7 @@ class Joueur
         this.socket = socket;
         this.room = null;
         this.name = name;
-        this.divinite = null;
+        this.divinite = 'no';
         this.ready = false;
         this.id = socket.id;
     }

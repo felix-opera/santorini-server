@@ -63,11 +63,21 @@ io.on('connection', (socket) => {
     });
 
     socket.on('idlePion', data => {
-        socket.broadcast.to(socket.joueur.room.name).emit('idlePion', data);
+        socket.broadcast.to(socket.joueur.room.name).emit('idlePion', {
+            joueur: socket.joueur.id,
+            data: data
+        });
     });
 
     socket.on('pionMove', data => {
-        socket.broadcast.to(socket.joueur.room.name).emit('pionMove', data);
+        socket.broadcast.to(socket.joueur.room.name).emit('pionMove', {
+            joueur: socket.joueur.id,
+            data: data
+        });
+    });
+
+    socket.on('construct', data => {
+        socket.broadcast.to(socket.joueur.room.name).emit('construct', data);
     });
 });
 

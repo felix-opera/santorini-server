@@ -9,6 +9,10 @@ const io = require('socket.io')(http);
 const rooms = new RoomCollection;
 const players = [];
 
+const roomTransitEvents = [
+    'construct', 'constructDome', 'endTurn', 'victory', 'endStep'
+];
+
 io.on('connection', (socket) => {
     console.log('new guest');
 
@@ -76,9 +80,11 @@ io.on('connection', (socket) => {
         });
     });
 
-    socket.on('construct', data => {
-        socket.broadcast.to(socket.joueur.room.name).emit('construct', data);
-    });
+    roomTransitEvents.forEach(ev => {
+        socket.on(ev, data => {
+            socket.broadcast.to(socket.joueur.room.name).emit(ev, data);
+        })
+    })
 });
 
 io.on('disconnect', socket => {

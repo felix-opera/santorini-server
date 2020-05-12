@@ -83,12 +83,13 @@ io.on('connection', (socket) => {
     roomTransitEvents.forEach(ev => {
         socket.on(ev, data => {
             socket.broadcast.to(socket.joueur.room.name).emit(ev, data);
-        })
-    })
-});
+        });
+    });
 
-io.on('disconnect', socket => {
-    rooms.disconnect(socket);
+    socket.on('disconnect', () => {
+        socket.broadcast.to(socket.joueur.room.name).emit('disconnection', socket.joueur.export());
+        rooms.disconnect(socket);
+    });
 });
 
 http.listen(4949, () => {

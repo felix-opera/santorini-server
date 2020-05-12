@@ -26,7 +26,8 @@ class Room
 
     disconnect(joueur) {
         joueur.socket.leave(this.name);
-        console.log(joueur.name + ' a quitté la room' + this.name);
+        this.players = this.players.filter(p => p.id !== joueur.id);
+        console.log(joueur.name + ' a quitté la room : ' + this.name);
     }
 
     get placeLeft () {

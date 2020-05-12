@@ -50,10 +50,10 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('addPlayer', data => {
+    socket.on('ready', data => {
         socket.joueur.name = data.name;
         socket.joueur.divinite = data.divinite;
-        socket.joueur.ready = true;
+        socket.joueur.ready = !socket.joueur.ready;
 
         console.log('joueur précisé : ', data);
 

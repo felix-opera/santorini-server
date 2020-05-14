@@ -2,8 +2,13 @@ const RoomCollection = require('./src/RoomCollection');
 const Joueur = require('./src/Joueur');
 const NoRoomLeft = require('./src/errors/NoRoomLeft')
 
+const fs = require('fs');
 const app = require('express')();
-const http = require('http').createServer(app);
+const http = require('https').createServer({
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem'),
+    passphrase: 'felix'
+}, app);
 const io = require('socket.io')(http);
 
 const rooms = new RoomCollection;
@@ -74,6 +79,13 @@ io.on('connection', (socket) => {
     });
 
     socket.on('pionMove', data => {
+        socket.broadcast.to(socket.joueur.room.name).emit('pionMove', {
+            joueur: socket.joueur.id,
+            data: data
+        });
+    });
+
+    socket.on('pionMoveForce', data => {
         socket.broadcast.to(socket.joueur.room.name).emit('pionMove', {
             joueur: socket.joueur.id,
             data: data

@@ -55,7 +55,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('ready', data => {
+    socket.on('refreshPlayer', data => {
         socket.joueur.name = data.name;
         socket.joueur.divinite = data.divinite;
         socket.joueur.ready = !socket.joueur.ready;

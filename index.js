@@ -4,11 +4,13 @@ const NoRoomLeft = require('./src/errors/NoRoomLeft')
 
 const fs = require('fs');
 const app = require('express')();
-const http = require('https').createServer({
-    key: fs.readFileSync('./key.pem'),
-    cert: fs.readFileSync('./cert.pem'),
-    passphrase: 'felix'
-}, app);
+// const http = require('https').createServer({
+//     key: fs.readFileSync('./key.pem'),
+//     cert: fs.readFileSync('./cert.pem'),
+//     passphrase: 'felix'
+// }, app);
+
+const http = require("http").createServer(app);
 const io = require('socket.io')(http);
 
 const rooms = new RoomCollection;
@@ -48,7 +50,7 @@ io.on('connection', (socket) => {
 
             socket.broadcast.to(roomName).emit('newPlayer', joueur.export());
         } catch (e) {
-            console.log('la grosse erreur : ', e.message);
+            console.log(e.message);
             if (e instanceof NoRoomLeft) {
                 socket.emit('noRoom', e.message);
             }
@@ -64,7 +66,8 @@ io.on('connection', (socket) => {
 
         // Tous prets
         if (socket.joueur.room.players.filter(p => p.ready).length == socket.joueur.room.players.length 
-        && socket.joueur.room.players.length > 1) {
+        && socket.joueur.room.players.length > 1 && socket.joueur.room.launched === false) {
+            socket.joueur.room.launched = true;
             io.to(socket.joueur.room.name).emit('letsgo', socket.joueur.room.export());
         } else {
             socket.broadcast.to(socket.joueur.room.name).emit('newPlayer', socket.joueur.export());
@@ -98,11 +101,23 @@ io.on('connection', (socket) => {
         });
     });
 
+    socket.on('disconnection', () => {
+        disconnection(socket);
+    });
+
     socket.on('disconnect', () => {
-        socket.broadcast.to(socket.joueur.room.name).emit('disconnection', socket.joueur.export());
-        rooms.disconnect(socket);
+        disconnection(socket);
     });
 });
+
+function disconnection(socket) {
+    if (!socket.joueur) {
+        return;
+    }
+    socket.broadcast.to(socket.joueur.room.name).emit('disconnection', socket.joueur.export());
+    rooms.disconnect(socket);
+    console.log('a quitté la room : ' + socket.joueur.room.name, socket.joueur.name);
+}
 
 http.listen(4949, () => {
     console.log('listening on *:4949');

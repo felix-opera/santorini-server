@@ -6,6 +6,7 @@ class Room
         this.name = name;
         this.players = [];
         this.places = 2;
+        this.launched = false;
     }
 
     export() {

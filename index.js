@@ -4,13 +4,13 @@ const NoRoomLeft = require('./src/errors/NoRoomLeft')
 
 const fs = require('fs');
 const app = require('express')();
-// const http = require('https').createServer({
-//     key: fs.readFileSync('./key.pem'),
-//     cert: fs.readFileSync('./cert.pem'),
-//     passphrase: 'felix'
-// }, app);
+const http = require('https').createServer({
+    key: fs.readFileSync('./key.pem'),
+    cert: fs.readFileSync('./cert.pem'),
+    passphrase: 'felix'
+}, app);
 
-const http = require("http").createServer(app);
+// const http = require("http").createServer(app);
 const io = require('socket.io')(http);
 
 const rooms = new RoomCollection;
@@ -63,6 +63,7 @@ io.on('connection', (socket) => {
         socket.joueur.ready = data.ready;
 
         console.log('joueur précisé : ', data);
+        console.log('room launched : ', socket.joueur.room.launched);
 
         // Tous prets
         if (socket.joueur.room.players.filter(p => p.ready).length == socket.joueur.room.players.length 
@@ -114,6 +115,7 @@ function disconnection(socket) {
     if (!socket.joueur) {
         return;
     }
+    socket.joueur.room.launched = false;
     socket.broadcast.to(socket.joueur.room.name).emit('disconnection', socket.joueur.export());
     rooms.disconnect(socket);
     console.log('a quitté la room : ' + socket.joueur.room.name, socket.joueur.name);

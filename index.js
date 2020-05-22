@@ -4,20 +4,21 @@ const NoRoomLeft = require('./src/errors/NoRoomLeft')
 
 const fs = require('fs');
 const app = require('express')();
-const http = require('https').createServer({
-    key: fs.readFileSync('./key.pem'),
-    cert: fs.readFileSync('./cert.pem'),
-    passphrase: 'felix'
-}, app);
+// const http = require('https').createServer({
+//     key: fs.readFileSync('./key.pem'),
+//     cert: fs.readFileSync('./cert.pem'),
+//     passphrase: 'felix'
+// }, app);
 
-// const http = require("http").createServer(app);
+const http = require("http").createServer(app);
 const io = require('socket.io')(http);
 
 const rooms = new RoomCollection;
 const players = [];
 
 const roomTransitEvents = [
-    'construct', 'constructDome', 'endTurn', 'victory', 'endStep'
+    'construct', 'constructDome', 'endTurn', 'victory', 'endStep', 'replay',
+    'pionSwitch'
 ];
 
 io.on('connection', (socket) => {

@@ -17,26 +17,29 @@ const rooms = new RoomCollection;
 const players = [];
 
 const roomTransitEvents = [
-    'construct', 'constructDome', 'endTurn', 'victory', 'endStep', 'replay',
+    'construire', 'construireDome', 'endTurn', 'victory', 'endStep', 'replay',
     'pionSwitch'
 ];
 
 io.on('connection', (socket) => {
-    console.log('new guest');
+    console.log('new guest', socket.id);
 
-    socket.emit('connected', socket.id);
+    socket.emit('connected', {
+        id: socket.id,
+        rooms: rooms.export()
+    });
 
-    socket.on('register', roomName => {
+    socket.on('connection', roomName => {
         try {
+            roomName = roomName.toLowerCase().replace(/ /g, '').replace(/-+/g, '-');
+            console.log('recherche de : ', roomName);
             let room = null;
             const joueur = new Joueur('unknown', socket);
             
             if (rooms.has(roomName)) {
                 room = rooms.get(roomName);
-                console.log('room retrouvée : ', room);
             } else {
                 room = rooms.add(roomName);
-                console.log('room added : ', room);
             }
             
             room.add(joueur);
@@ -46,25 +49,23 @@ io.on('connection', (socket) => {
                 room: room.export(),
                 you: joueur.id
             });
-    
-            console.log('ajouté : ', joueur.name);
 
-            socket.broadcast.to(roomName).emit('newPlayer', joueur.export());
+            io.emit('rooms', rooms.export());
+
+            socket.broadcast.to(roomName).emit('playerInfo_RX', joueur.export());
         } catch (e) {
-            console.log(e.message);
             if (e instanceof NoRoomLeft) {
                 socket.emit('noRoom', e.message);
             }
         }
     });
 
-    socket.on('refreshPlayer', data => {
+    socket.on('playerInfo_TX', data => {
         socket.joueur.name = data.name;
         socket.joueur.divinite = data.divinite;
         socket.joueur.ready = data.ready;
 
         console.log('joueur précisé : ', data);
-        console.log('room launched : ', socket.joueur.room.launched);
 
         // Tous prets
         if (socket.joueur.room.players.filter(p => p.ready).length == socket.joueur.room.players.length 
@@ -72,7 +73,8 @@ io.on('connection', (socket) => {
             socket.joueur.room.launched = true;
             io.to(socket.joueur.room.name).emit('letsgo', socket.joueur.room.export());
         } else {
-            socket.broadcast.to(socket.joueur.room.name).emit('newPlayer', socket.joueur.export());
+            console.log('broadcast to ', socket.joueur.room.name);
+            socket.broadcast.to(socket.joueur.room.name).emit('playerInfo_RX', socket.joueur.export());
         }
     });
 
@@ -83,15 +85,15 @@ io.on('connection', (socket) => {
         });
     });
 
-    socket.on('pionMove', data => {
-        socket.broadcast.to(socket.joueur.room.name).emit('pionMove', {
+    socket.on('deplacerPion', data => {
+        socket.broadcast.to(socket.joueur.room.name).emit('deplacerPion', {
             joueur: socket.joueur.id,
             data: data
         });
     });
 
     socket.on('pionMoveForce', data => {
-        socket.broadcast.to(socket.joueur.room.name).emit('pionMove', {
+        socket.broadcast.to(socket.joueur.room.name).emit('deplacerPion', {
             joueur: socket.joueur.id,
             data: data
         });
@@ -99,6 +101,7 @@ io.on('connection', (socket) => {
 
     roomTransitEvents.forEach(ev => {
         socket.on(ev, data => {
+            console.log('transmitting : ', ev, data);
             socket.broadcast.to(socket.joueur.room.name).emit(ev, data);
         });
     });
@@ -116,6 +119,7 @@ function disconnection(socket) {
     if (!socket.joueur) {
         return;
     }
+    io.emit('rooms', rooms.export());
     socket.joueur.room.launched = false;
     socket.broadcast.to(socket.joueur.room.name).emit('disconnection', socket.joueur.export());
     rooms.disconnect(socket);

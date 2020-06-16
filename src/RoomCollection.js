@@ -31,6 +31,10 @@ class RoomCollection
 
         return null;
     }
+
+    export () {
+        return this.rooms.map(r => r.export());
+    }
 }
 
 module.exports = RoomCollection;
